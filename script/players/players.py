@@ -69,6 +69,7 @@ class Position(Enum):
 
 class Status(Enum):
     ACTIVE = "Active"
+    INACTIVE = "Inactive"
 
 class Team(Enum):
     KANSAS_CITY = 'KC'
