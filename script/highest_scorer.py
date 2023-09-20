@@ -1,13 +1,11 @@
 import requests
 import argparse
 import json
-from pathlib import Path
 from typing import List
 
 LEAGUE_ID = '872554216374337536'
 TEST_LEAGUE = 'https://api.sleeper.app/v1/league/872554216374337536/'
 MATCHUP = 'https://api.sleeper.app/v1/league/<league_id>/matchups/<week>'
-
 SLEEPER_API = "https://docs.sleeper.com/"
 
 class User:
