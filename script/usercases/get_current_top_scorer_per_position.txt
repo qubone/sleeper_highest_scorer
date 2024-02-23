@@ -1,0 +1,11 @@
+Get the top scorer of each position per week
+
+#1
+Input:
+Week(s), Position, League (scoring settings)
+
+Output:
+List of top X players per position
+
+#2 
+List of top rookie X players per position
