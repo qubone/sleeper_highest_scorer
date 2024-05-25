@@ -1,0 +1,23 @@
+{
+    "verification": null,
+    "username": "testuser",
+    "user_id": "000000000000000000",
+    "token": null,
+    "summoner_region": null,
+    "summoner_name": null,
+    "solicitable": null,
+    "real_name": null,
+    "phone": null,
+    "pending": null,
+    "notifications": null,
+    "metadata": null,
+    "is_bot": false,
+    "email": null,
+    "display_name": "Testuser",
+    "deleted": null,
+    "data_updated": null,
+    "currencies": null,
+    "created": null,
+    "cookies": null,
+    "avatar": "00000000000000000000000000000000"
+}
