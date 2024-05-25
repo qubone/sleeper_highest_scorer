@@ -1,0 +1,25 @@
+python app_name 
+--league (this will be the base league used for scoring)
+--player_info
+--get_highest_scorer
+--week
+--output-format (json, html, xml/spredsheet)
+
+python cli interactive?
+
+Base idea:
+
+python -m sleeperbuddy --get_highest_scorer --current-season
+>>"Please enter week"
+<< "14"
+>>"Please enter position"
+<< "QB"
+>> "Please enter depth"
+<< "3"
+>> "The top 3 Quarterbacks of week 14 is:"
+>> "1. Patrick Mahomes 34.6 fantasypoints."
+>> "2. Jared Goff 24.5 fantasy points. "
+>> "3. Sam Howell 22.1 fantasy points. "
+
+python -m sleeperbuddy.get_highest_scorer --current-season --week 14 --Position QB
+--depth 3

@@ -4,6 +4,16 @@ from script.common.common import read_json_from_file
 from dataclasses import dataclass
 from enum import Enum
 
+class PlayerPersonal:
+    ''' Class for personal player data. '''
+    def __init__(self,  player_db: Dict[str, Any]) -> None:
+        self.full_name = player_db['full_name']
+        self.age = player_db['age']
+        self.weight = player_db['weight']
+        self.height = player_db['height']
+        self.birth_date = player_db['birth_date']
+        self.college = player_db['college']
+        self.high_school = player_db['high_school']
 
 class PlayerPersonal:
     """Class for personal player data."""
@@ -69,6 +79,7 @@ class Position(Enum):
 
 class Status(Enum):
     ACTIVE = "Active"
+    INACTIVE = "Inactive"
 
 class Team(Enum):
     KANSAS_CITY = 'KC'

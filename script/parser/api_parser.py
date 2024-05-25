@@ -513,7 +513,7 @@ class SleeperAPIParser:
         """
         return self._http_get_response_data_json(f"{self.base_url}/players/nfl")
 
-    def get_trending_players(self, type, lookback_hours: Optional[str] = 24, limit: Optional[str] = 25):
+    def get_trending_players(self, type, lookback_hours: Optional[str] = "24", limit: Optional[str] = "25"):
         """You can use this endpoint to get a list of trending players based on adds or drops in the past 24 hours.
 
         GET https://api.sleeper.app/v1/players/<sport>/trending/<type>?lookback_hours=<hours>&limit=<int>

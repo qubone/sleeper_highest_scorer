@@ -1,0 +1,7 @@
+All configurations should be stored in a json file.
+
+They can however be configured from CLI.
+
+python -m sleeper_buddy.configure --add-user 123455 --add-league iaisdiasidi
+
+This will update the configuration file

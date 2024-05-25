@@ -140,6 +140,11 @@ class CustomSettings:
         self.rec_td_50p: float = score_settings.get('rec_td_50p')
 
 
+class LeagueType(Enum):
+    REDRAFT = 0
+    KEEPER  = 1
+    DYNASTY = 2
+
 class ScoringSettings():
     """Entry point for league scoring settings."""
     def __init__(self, score_settings: Dict[str, float]) -> None:
