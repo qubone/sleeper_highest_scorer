@@ -1,10 +1,10 @@
 """Handling of all data related to leagues."""
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Optional, Self
 
-from script.leagues.rosters import LeagueRoster
-from script.parser.api_parser import SleeperAPIParser
+from script.leagues.rosters import Roster
+from script.api_parser import SleeperAPIParser
 from script.players.player_types import (Bench, Flex, Kicker, Quarterback,
                                          RunnningBack, SuperFlex, TightEnd,
                                          WideReceiver)
@@ -18,7 +18,8 @@ T = TypeVar('T', bound=Enum)
 
 
 class RosterPosition(Enum):
-    """Handling of roster position data from Sleeper API."""
+    """Handling of roster position data from Sleeper API.
+    """
     QB = 'QB'
     RB = 'RB'
     WR = 'WR'
@@ -29,37 +30,35 @@ class RosterPosition(Enum):
     K = 'K'
     BN = 'BN'
 
-    @classmethod
-    def validate(cls: Type[T], value: str) -> bool:
-        return value in (v for v in cls._value2member_map_)
-
 
 class LeagueType(Enum):
-    """Handling of league type from Sleeper API."""
+    """Handling of league type from Sleeper API.
+    """
     REDRAFT = 0
     KEEPER = 1
     DYNASTY = 2
 
     @classmethod
-    def validate(cls, value):
-        return value in cls.__members__
+    def get_league_type(cls, value: int) -> str:
+        """Maps league types from integers to league types.
 
-    """ 
-    def validate_color(value):
-    try:
-        color = Color[value]
-        return True
-    except KeyError:
-        return False
-    
-        
-    def validate_color(value):
-    return value in Color.__members__
+        Args:
+            value (int): JSON type integer data
+
+        Returns:
+            str: Mapped league type
+        """
+        mapping: Dict[int, str] = {
+            cls.REDRAFT.value: "Redraft",
+            cls.KEEPER.value: "Keeper",
+            cls.DYNASTY.value: "Dynasty"
+        }
+        return mapping.get(value, "Unknown")
+
+
+class ReceivingScoring:
+    """Handling of receiving score data.
     """
-
-
-class ReceivingScoring():
-    """Handling of receiving score data."""
     def __init__(self, score_settings: Dict[str, float]) -> None:
         self.rec: float = score_settings.get('playoff_week_start')
         self.rec_yd: float = score_settings.get('playoff_week_start')
@@ -69,8 +68,9 @@ class ReceivingScoring():
 
 
 @dataclass
-class PassingScoring():
-    """Handling of passing score data."""
+class PassingScoring:
+    """Handling of passing score data.
+    """
     def __init__(self, score_settings) -> None:
         self.pass_yd = score_settings.get('playoff_week_start')
         self.pass_td = score_settings.get('playoff_week_start')
@@ -78,8 +78,9 @@ class PassingScoring():
 
 
 @dataclass
-class RushingScoring():
-    """Handling of rushing score data."""
+class RushingScoring:
+    """Handling of rushing score data.
+    """
     def __init__(self, score_settings) -> None:
         self.rush_yd: float = score_settings.get('playoff_week_start')
         self.rush_td: float = score_settings.get('playoff_week_start')
@@ -87,8 +88,9 @@ class RushingScoring():
 
 
 @dataclass
-class Defense():
-    """Handling of defense score data."""
+class Defense:
+    """Handling of defense score data.
+    """
     def __init__(self, score_settings: Dict[str, float]) -> None:
         self.def_td: float = score_settings.get('def_td')
         self.safe: float = score_settings.get('safe')
@@ -103,7 +105,7 @@ class Defense():
 
 
 @dataclass
-class SpecialTeams():
+class SpecialTeams:
     """Handling of special teams data."""
     def __init__(self, score_settings: Dict[str, float]) -> None:
         self.st_td: float = score_settings.get('st_td')
@@ -139,13 +141,7 @@ class CustomSettings:
         self.rec_td_40p: float = score_settings.get('rec_td_40p')
         self.rec_td_50p: float = score_settings.get('rec_td_50p')
 
-
-class LeagueType(Enum):
-    REDRAFT = 0
-    KEEPER  = 1
-    DYNASTY = 2
-
-class ScoringSettings():
+class ScoringSettings:
     """Entry point for league scoring settings."""
     def __init__(self, score_settings: Dict[str, float]) -> None:
         self._rec_settings = ReceivingScoring(score_settings)
@@ -233,7 +229,7 @@ class LeagueWaiverType():
 
 
 @dataclass
-class LeagueDraftData():
+class DraftData:
     """Handling of league draft settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.draft_rounds: int #= settings.get('draft_rounds')
@@ -247,7 +243,7 @@ class PlayoffSeedType(Enum):
     RE_SEED = 1
 
 
-class LeaguePlayoffData():
+class PlayoffData:
     """Handling of league playoff settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.playoff_teams: int = settings.get('playoff_teams')
@@ -266,7 +262,7 @@ class LeaguePlayoffData():
 
 
 @dataclass
-class LeagueWaiverData():
+class WaiverData:
     """Handling of league waiver settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.waiver_type = LeagueWaiverType(settings.get('waiver_type'))
@@ -281,7 +277,7 @@ class LeagueWaiverData():
 
 
 @dataclass
-class LeagueRosterSettings():
+class RosterSettings:
     """Handling of league roster settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.bench_lock: int = settings.get('bench_lock')
@@ -292,7 +288,7 @@ class LeagueRosterSettings():
 
 
 @dataclass
-class LeagueTradeSettings():
+class TradeSettings:
     """Handling of league trade settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.trade_review_days: int = settings.get('trade_review_days')
@@ -300,13 +296,17 @@ class LeagueTradeSettings():
         self.disable_trades: int = settings.get('disable_trades')
 
 
-class LeagueTopSettings():
+class TopSettings:
     """Handling of high level league settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
         self.start_week: int = settings.get('start_week')
-        self.type: LeagueType = settings.get('type')
+        self.type: str = LeagueType.get_league_type(settings.get('type'))
         self._num_teams: int = settings.get('num_teams')
         self.best_ball: int = settings.get('best_ball')
+
+    @property
+    def league_type(self):
+        return self.type
 
     def is_best_ball(self) -> bool:
         """Returns true if league is best ball."""
@@ -334,93 +334,160 @@ class LeagueTopSettings():
 class LeagueSettingsNew():
     """Entry point for league settings."""
     def __init__(self, settings: Dict[str, int]) -> None:
-        self._top_settings = LeagueTopSettings(settings)
-        self._waiver_settings = LeagueWaiverData(settings)
-        self._draft_settings = LeagueDraftData(settings)
-        self._playoff_settings = LeaguePlayoffData(settings)
-        self._roster_settings = LeagueRosterSettings(settings)
-        self._trade_settings = LeagueTradeSettings(settings)
+        self._top_settings = TopSettings(settings)
+        self._waiver_settings = WaiverData(settings)
+        self._draft_settings = DraftData(settings)
+        self._playoff_settings = PlayoffData(settings)
+        self._roster_settings = RosterSettings(settings)
+        self._trade_settings = TradeSettings(settings)
 
     @property
-    def top_settings(self) -> LeagueTopSettings:
+    def top_settings(self) -> TopSettings:
         """Returns league top settings."""
         return self._top_settings
 
     @property
-    def waiver_settings(self) -> LeagueWaiverData:
+    def waiver_settings(self) -> WaiverData:
         """Returns league waiver settings."""
         return self._waiver_settings
 
     @property
-    def draft_settings(self) -> LeagueDraftData:
+    def draft_settings(self) -> DraftData:
         """Returns league draft settings."""
         return self._draft_settings
 
     @property
-    def playoff_settings(self) -> LeaguePlayoffData:
+    def playoff_settings(self) -> PlayoffData:
         """Returns league playoff settings."""
         return self._playoff_settings
 
     @property
-    def roster_settings(self) -> LeagueRosterSettings:
+    def roster_settings(self) -> RosterSettings:
         """Returns league roster settings."""
         return self._roster_settings
 
     @property
-    def trade_settings(self) -> LeagueTradeSettings:
+    def trade_settings(self) -> TradeSettings:
         """Returns league trade settings."""
         return self._trade_settings
 
 
-class LeagueMetadata():
+class Metadata:
     """Handling of league meta data."""
-    def __init__(self, meta_data: dict) -> None:
-        self.latest_league_winner_roster_id: str = meta_data.get(
-            'latest_league_winner_roster_id'
-            )
-        self.keeper_deadline: str = meta_data.get('keeper_deadline')
-        self.copy_from_league_id: str = meta_data.get('copy_from_league_id')
-        self.auto_continue: str = meta_data.get('auto_continue')
+    def __init__(
+        self,
+        llwr_id: Optional[str],
+        keeper_deadline: str,
+        copy_from_league_id: Optional[str],
+        auto_continue: str,
+    ) -> None:
+        self.latest_league_winner_roster_id = llwr_id
+        self.keeper_deadline = keeper_deadline
+        self.copy_from_league_id = copy_from_league_id
+        self.auto_continue = auto_continue
 
+    @classmethod
+    def from_dict(cls, meta_data: Dict[str, Any]):
+        """Creates User object from dictionary data.
 
-class LeagueTopData():
-    """Handling league top data."""
-    def __init__(self, league_data: Dict[str, Any]) -> None:
-        self.name: str = league_data.get('name')
-        self.status: str = league_data.get('status')
-        self.season: str = league_data.get('season')
-        self.season_type: str = league_data.get('season_type')
-        self.sport: str = league_data.get('sport')
-        self.avatar: str = league_data.get('avatar')
-        self.total_rosters: int = league_data.get('total_rosters')
+        Args:
+            user_data (Dict[str, Any]): _description_
 
-    def get_name(self):
-        """Returns the league name."""
-        return self.name
+        Returns:
+            _type_: _description_
+        """
 
-    def get_status(self):
-        """Returns the league status."""
-        return self.status
+        return cls(
+            meta_data.get("latest_league_winner_roster_id"),
+            meta_data["keeper_deadline"],
+            meta_data.get("copy_from_league_id"),
+            meta_data["auto_continue"],
+        )
 
-    def get_season(self):
-        """Returns the number of rosters in a league."""
-        return self.season
+# TODO: Ready to deploy.
+class TopData:
+    """Handling league top level data.
+    """
+    def __init__(
+        self,
+        name: str,
+        status: str,
+        season: str,
+        season_type: str,
+        sport: str,
+        avatar: str,
+        total_rosters: int,
+    ) -> None:
+        self._name: str = name
+        self._status: str = status
+        self._season: str = season
+        self._season_type: str = season_type
+        self._sport: str = sport
+        self._avatar: str = avatar
+        self._total_rosters: int = total_rosters
 
-    def get_season_type(self):
-        """Returns the league season type."""
-        return self.season_type
+    @classmethod
+    def from_dict(cls, league_data: Dict[str, Any]) -> Self:
+        """Creates User object from dictionary data.
 
-    def get_sport(self):
-        """Returns the league sport."""
-        return self.sport
+        Args:
+            user_data (Dict[str, Any]): _description_
 
-    def get_avatar(self):
-        """Returns the league avatar."""
-        return self.avatar
+        Returns:
+            _type_: _description_
+        """
 
-    def get_total_rosters(self):
-        """Returns the number of rosters in a league."""
-        return self.total_rosters
+        return cls(
+            league_data["name"],
+            league_data["status"],
+            league_data["season"],
+            league_data["season_type"],
+            league_data["sport"],
+            league_data["avatar"],
+            league_data["total_rosters"],
+        )
+
+    @property
+    def name(self) -> str:
+        """League name.
+        """
+        return self._name
+
+    @property
+    def status(self) -> str:
+        """League status.
+        """
+        return self._status
+
+    @property
+    def season(self) -> str:
+        """League season.
+        """
+        return self._season
+
+    @property
+    def season_type(self) -> str:
+        """League season type.
+        """
+        return self._season_type
+
+    @property
+    def sport(self) -> str:
+        """League sport.
+        """
+        return self._sport
+
+    @property
+    def avatar(self) -> str:
+        """League avatar.
+        """
+        return self._avatar
+
+    @property
+    def total_rosters(self) -> int:
+        """Number of rosters in a league.
+        """
+        return self._total_rosters
 
 
 @dataclass
@@ -474,9 +541,104 @@ class League:
 
     League data is retrieved in JSON format using HTTP get
     Using league_id as input.
-
     """
-    def __init__(self, league_data: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        top_data: TopData,
+        league_id: str,
+        draft_id: str,
+        roster_positions: LeaguePositions,
+        bracket_data: LeagueBracketData,
+        scoring_settings: ScoringSettings,
+        league_settings: LeagueSettingsNew,
+        metadata: Optional[Metadata],
+    ) -> None:
+        self._top_data = top_data
+        self._league_id = league_id
+        self._draft_id = draft_id
+        self._roster_positions = roster_positions
+        self._bracket_data = bracket_data
+        self._scoring_settings = scoring_settings
+        self._league_settings = league_settings
+        self._metadata = metadata
+
+
+    @property
+    def rosters(self) -> List[Roster]:
+        """Rosters in a league.
+        """
+        league_id = self._league_id
+        parser = SleeperAPIParser()
+        rosters = parser.get_rosters_in_a_league(league_id)
+        rosters_obj = []
+        #for ros in rosters:
+        #    rosters_obj.append(Roster.from_dict(ros))
+        return rosters
+        
+
+    @property
+    def name(self) -> str:
+        """League name.
+        """
+        return self._top_data.name
+
+    @property
+    def number_of_rosters(self) -> int:
+        """Number of teams in a league.
+        """
+        return self._top_data.total_rosters
+
+    @property
+    def id(self) -> str:
+        """League ID.
+        """
+        return self._league_id
+
+    @property
+    def draft_id(self) -> str:
+        """Draft ID.
+        """
+        return self._draft_id
+
+    @property
+    def roster_positions(self) -> LeaguePositions:
+        """Roster positions.
+        """
+        return self._roster_positions
+
+    @property
+    def bracket_data(self) -> LeagueBracketData:
+        """League bracket data.
+        """
+        return self._bracket_data
+
+    @property
+    def scoring_settings(self) -> ScoringSettings:
+        """League score settings.
+        """
+        return self._scoring_settings
+
+    @property
+    def league_settings(self) -> LeagueSettingsNew:
+        """League settings.
+        """
+        return self._league_settings
+
+    @property
+    def metadata(self) -> Optional[Metadata]:
+        """League metadata.
+        """
+        return self._metadata
+
+    @classmethod
+    def from_dict(cls, league_data: Dict[str, Any]) -> Self:
+        """Creates User object from dictionary data.
+
+        Args:
+            user_data (Dict[str, Any]): _description_
+
+        Returns:
+            _type_: _description_
         self._league_id: str = league_data.get('league_id')
         self._draft_id: str = league_data.get('draft_id')
         self._roster_positions = LeaguePositions(
@@ -487,42 +649,38 @@ class League:
             league_data.get('scoring_settings')
             )
         self._league_settings = LeagueSettingsNew(league_data.get('settings'))
-        self._metadata = LeagueMetadata(league_data.get('metadata'))
+        self._metadata = Metadata(league_data.get('metadata'))
 
-    @property
-    def league_id(self) -> str:
-        """Returns the league ID."""
-        return self._league_id
+        """
+        league_id: str = league_data['league_id']
+        draft_id: str = league_data['draft_id']
+        top_data = TopData.from_dict(league_data)
+        roster_positions = LeaguePositions(
+            league_data['roster_positions']
+            )
+        bracket_data = LeagueBracketData(league_data)
+        scoring_settings = ScoringSettings(
+            league_data['scoring_settings']
+            )
+        league_settings = LeagueSettingsNew(league_data['settings'])
+        metadata = Metadata.from_dict(league_data["metadata"]) if league_data.get('metadata') else None
 
-    @property
-    def draft_id(self) -> str:
-        """Returns the draft ID."""
-        return self._draft_id
+        return cls(
+            top_data,
+            league_id,
+            draft_id,
+            roster_positions,
+            bracket_data,
+            scoring_settings,
+            league_settings,
+            metadata
+        )
 
-    @property
-    def roster_positions(self) -> LeaguePositions:
-        """Returns the roster positions."""
-        return self._roster_positions
+    def __str__(self) -> str:
+        return f"League: {self.name} ({self.number_of_rosters}-Team {self.league_settings.top_settings.league_type})\n"
 
-    @property
-    def bracket_data(self) -> LeagueBracketData:
-        """Returns the league bracket data. ."""
-        return self._bracket_data
-
-    @property
-    def scoring_settings(self) -> ScoringSettings:
-        """Returns the league score settings."""
-        return self._scoring_settings
-
-    @property
-    def league_settings(self) -> LeagueSettingsNew:
-        """Returns the league settings."""
-        return self._league_settings
-
-    @property
-    def metadata(self) -> LeagueMetadata:
-        """Returns the league metadata."""
-        return self._metadata
+    def __repr__(self):
+        return f"League Debug data: {self.name} {self._league_id}\n"
 
 
 class LeagueParse:
@@ -533,13 +691,13 @@ class LeagueParse:
 
     def get_league(self) -> League:
         """Returns the League data for given league."""
-        data = self.parser.get_league(self.league_id)
-        return League(data)
+        data = self.parser.get_specific_league(self.league_id)
+        return League.from_dict(data)
 
-    def get_rosters(self) -> List[LeagueRoster]:
+    def get_rosters(self):
         """Returns all rosters from a league."""
         rosters = []
-        league_rosters = self.parser.get_league_rosters(self.league_id)
-        for roster in league_rosters:
-            rosters.append(LeagueRoster(roster))
+        league_rosters = self.parser.get_rosters_in_a_league(self.league_id)
+        #for roster in league_rosters:
+        #    rosters.append(LeagueRoster(roster))
         return rosters

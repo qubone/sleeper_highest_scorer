@@ -2,15 +2,15 @@ from pathlib import Path
 from typing import List
 import pytest
 
-from script.common.common import write_json_to_file, read_json_from_file
-from script.user.user import SleeperUser
-from script.avatars.avatar import SleeperAvatar
-from script.leagues.rosters import (LeagueRoster,
-                                    RosterMetadata, RosterSettings,
-                                    RosterWaiverData, RosterTotalPoints,
-                                    RosterPlayers)
+from script.common import write_json_to_file, read_json_from_file
+from script.user import User
+from script.model.avatar import Avatar
+from script.leagues.rosters import (Roster,
+                                    Metadata, Settings,
+                                    WaiverData, TotalPoints,
+                                    Players)
 from script.leagues.leagues import League, LeagueParse
-from script.players.players import Player, PlayerPersonal, PlayerProfessional, PlayerSleeper
+from script.players.players import Player
 
 
 class Setup:
@@ -27,7 +27,7 @@ class Setup:
             "9228", "9509", "9756", "9997"
             ]
         self.test_roster_path = Path(
-            'test/resources/test_single_roster.json'
+            'C:\\Users\\Linus\\Desktop\\Programming\\sleeper_highest_scorer\\test\\resources\\test_single_roster.json'
             )
         self.test_roster_settings_path = Path(
             'test/resources/test_roster_settings.json'
@@ -47,14 +47,14 @@ class Setup:
             self.user_path
             )
         # self.league = League('1004113252818726912')
-        self.roster = LeagueRoster(self.roster_data)
-        self.roster_settings = RosterSettings(self.roster_settings_data)
-        self.roster_players = RosterPlayers(
+        self.roster = Roster.from_dict(self.roster_data)
+        self.roster_settings = Settings(self.roster_settings_data)
+        self.roster_players = Players(
             self.roster_data.get("players"),
             self.roster_data.get("starters"),
             self.roster_data.get("taxi"),
         )
-        self.user = SleeperUser(self.user_data)
+        self.user = User(self.user_data)
         self.test_url = 'https://api.sleeper.app/v1/user/' \
                         '727977584134025216/leagues/nfl/2023'
         self.database = "script/resources/players_db.json"
@@ -68,16 +68,16 @@ def setup_fixture():
 
 def test_get_user(setup: Setup):
     """Test Sleeper User data."""
-    assert isinstance(setup.user, SleeperUser)
-    assert setup.user.user_name == 'testuser'
-    assert setup.user.user_id == '000000000000000000'
+    assert isinstance(setup.user, User)
+    assert setup.user.name == 'testuser'
+    assert setup.user.id == '000000000000000000'
     assert setup.user.is_bot is False
     assert setup.user.display_name == 'Testuser'
 
 
 def test_get_avatar(setup: Setup):
     """Test Sleeper User avatar."""
-    avatar = SleeperAvatar(setup.avatar)
+    avatar = Avatar(setup.avatar)
     assert avatar.avatar_id == "00000000000000000000000000000000"
     assert avatar.avatar_url == \
         "https://sleepercdn.com/avatars/00000000000000000000000000000000"
@@ -92,7 +92,7 @@ def test_get_league_data(setup: Setup):
     rosters = parser.get_rosters()
     assert len(rosters) == 8
     assert isinstance(league, League)
-    assert isinstance(rosters[0], LeagueRoster)
+    assert isinstance(rosters[0], Roster)
 
 
 # def test_get_leagues(setup: Setup):
@@ -114,20 +114,18 @@ def test_get_roster(setup: Setup):
     ''' Test for fetching league roster data. '''
     parser = LeagueParse(setup.league_id) #TODO: Use json file instead for testcase
     rosters = parser.get_rosters()
-    test = LeagueRoster()
+    test = Roster()
     single_roster = rosters[0]
     
-    assert isinstance(setup.roster, LeagueRoster)
-    assert isinstance(setup.roster.roster_settings, RosterSettings)
-    assert isinstance(setup.roster.roster_metadata, RosterMetadata)
-    assert isinstance(setup.roster.roster_players, RosterPlayers)
+    assert isinstance(setup.roster, Roster)
+    assert isinstance(setup.roster.roster_settings, Settings)
+    assert isinstance(setup.roster.roster_metadata, Metadata)
+    assert isinstance(setup.roster.roster_players, Players)
     assert setup.roster.roster_id == 1
 
 def test_player(setup: Setup):
     player = Player("8130")
-    assert isinstance(player.professional, PlayerProfessional)
-    assert isinstance(player.personal, PlayerPersonal)
-    assert isinstance(player.sleeper, PlayerSleeper)
+    assert isinstance(player.professional, Player)
     assert player.id == '8130'
     assert player.professional.depth_chart_order == 1
     assert player.professional.position == 'TE'

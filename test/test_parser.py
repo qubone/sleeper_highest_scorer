@@ -1,9 +1,13 @@
 from pathlib import Path
 from pytest import MonkeyPatch, fixture
-from script.parser.api_parser import SleeperAPIParser
+from script.api_parser import SleeperAPIParser
 import requests
 
 from unittest.mock import MagicMock, Mock
+from script.players.players import Player
+from script.leagues.leagues import League
+from typing import List
+
 
 
 class Setup:
@@ -24,6 +28,7 @@ class Setup:
                     "display_name": "Linusbo",
                     "avatar": "88700289dc890fc9064fb95f84b1c3eb"}
         self.mocker = MagicMock()
+        self.api_parser = SleeperAPIParser()
         
         #TODO: MonkeyPatch
 
@@ -64,10 +69,67 @@ def test_get_players(setup: Setup, monkeypatch: MonkeyPatch):
 
 def test_get_players_using_mock(setup: Setup):
     fake_resp = Mock()
-    fake_resp.json = setup.mocker(return_value=setup.test_user_data)
-    fake.re
+    #fake_resp.json = setup.mocker(return_value=setup.test_user_data)
+    #fake.re
 
 
+def contains_letter(s: str):
+    return any(char.isalpha() for char in s)
+
+
+def test_get_trending_players(setup: Setup):
+    """Get trending players and check if rostered in any league.
+
+    Args:
+        setup (Setup): _description_
+    """
+    response = setup.api_parser.get_trending_players(trend_type="add", lookback_hours="24", limit="25")
+    trending_up_players = []
+    for trend in response:
+        player = trend['player_id']
+        if not contains_letter(player):
+            # Keep player as id for performance
+            #players.append(Player(player))
+            trending_up_players.append(player)
+        else:
+            defense = Player(player)
+            print("TEST")
+    #print(trending_up_players)
+
+    #Get all leagues of user
+    leagues = setup.api_parser.get_all_leagues_for_user(setup.user_id)
+    league_list: List[League] = []
+    # Create league objects for each league
+    for league in leagues:
+        league_list.append(League.from_dict(league))
+    rostered_players = []
+    available_players = []
+    # Loop through all leagues
+    for li in league_list:
+        #test = li.rosters
+        # Loop through all rosters in a league
+        rosters = li.rosters
+        for roster in rosters:
+            roster_players = roster["players"]
+            rostered_players.extend(roster_players)
+        #print("Test")
+        for player in trending_up_players:
+            if player not in rostered_players:
+                available_players.append(Player(player))
+        # Find all players in a roster
+        print("\nAvailable players in ", li)
+        print(available_players)
+        print("############")
+    print("Test")
+
+    # Get all rosters in a league
+    # Should be inside League class
+    rosters = setup.api_parser.get_rosters_in_a_league()
+    # Check if each player are on any roster in a league
+    # Loop through rosters
+
+
+    
 
 
 '''

@@ -3,7 +3,7 @@
 https://docs.sleeper.com/#introduction
 """
 from typing import Dict, Optional, Tuple, Any
-from requests import get
+from requests import get, HTTPError
 from datetime import datetime
 
 
@@ -22,15 +22,17 @@ class SleeperAPIParser:
     
     """
     def __init__(self) -> None:
-        self.base_url = 'https://api.sleeper.app/v1/'
+        self.base_url = 'https://api.sleeper.app/v1'
         self.sport = 'nfl'
         self.season = datetime.now().strftime("%Y")
 
     @staticmethod
-    def _http_get_response_data_json(url: str) -> Dict[str, Any]:
+    def _http_get_response_data_json(url: str) -> Dict[str, Any] | None:
         """Returns HTTP GET in JSON format."""
         response = get(url, timeout=None)
-        return response.json() if response.status_code == 200 else None
+        if response.status_code != 200:
+            raise HTTPError("Invalid request")
+        return response.json()
 
     def get_user(self, user_id: str, user_name: Optional[str] = None):
         """Via the user resource, you can GET the user object by either providing
@@ -48,9 +50,10 @@ class SleeperAPIParser:
         "avatar": "cc12ec49965eb7856f84d71cf85306af"
         }
         """
-        if user_id is not None and user_name is None:
+        user = ""
+        if user_id and not user_name:
             user = user_id
-        elif user_name is not None:
+        elif user_name:
             user = user_name
 
         return self._http_get_response_data_json(f"{self.base_url}/user/{user}")
@@ -492,6 +495,23 @@ class SleeperAPIParser:
 
         Returns:
             _type_: _description_
+
+        [
+            {
+                "season": "2019",
+                "round": 5,              // which round the pick is
+                "roster_id": 1,          // roster_id of ORIGINAL owner
+                "previous_owner_id": 1,  // roster_id of the previous owner
+                "owner_id": 2,           // roster_id of current owner
+            },
+            {
+                "season": "2019",
+                "round": 3,              // which round the pick is
+                "roster_id": 2,          // roster_id of original owner
+                "previous_owner_id": 2,  // roster_id of previous owner
+                "owner_id": 1,           // roster_id of current owner
+            }
+        ]
         """
         return self._http_get_response_data_json(
             f"{self.base_url}/draft/{draft_id}/traded_picks"
@@ -511,9 +531,10 @@ class SleeperAPIParser:
         Returns:
             _type_: _description_
         """
-        return self._http_get_response_data_json(f"{self.base_url}/players/nfl")
+        url = "https://raw.githubusercontent.com/qubone/sleeper_fetch_players/refs/heads/main/data/sleeper_data_latest.json"
+        return self._http_get_response_data_json(url)
 
-    def get_trending_players(self, type, lookback_hours: Optional[str] = "24", limit: Optional[str] = "25"):
+    def get_trending_players(self, trend_type: str, lookback_hours: Optional[str] = "24", limit: Optional[str] = "25"):
         """You can use this endpoint to get a list of trending players based on adds or drops in the past 24 hours.
 
         GET https://api.sleeper.app/v1/players/<sport>/trending/<type>?lookback_hours=<hours>&limit=<int>
@@ -530,4 +551,4 @@ class SleeperAPIParser:
                 }
             ]
         """
-        return self._http_get_response_data_json(f"{self.base_url}/players/{self.sport}/trending/{type}?lookback_hours=<{lookback_hours}>&limit=<{limit}>")
+        return self._http_get_response_data_json(f"{self.base_url}/players/{self.sport}/trending/{trend_type}?lookback_hours={lookback_hours}&limit={limit}")

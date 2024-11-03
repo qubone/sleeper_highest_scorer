@@ -24,9 +24,9 @@ def write_json_to_file(data: dict, output_file: str):
         json.dump(data, file, indent=4)
 
 
-def read_json_from_file(input_file: str) -> Dict[str, Any]:
+def read_json_from_file(input_file: Path) -> Dict[str, Any]:
     """Helper function to read JSON data from file."""
-    if not Path(input_file).exists():
+    if not input_file.exists():
         raise FileNotFoundError
     with open(input_file, "r", encoding="utf-8") as file:
         return json.load(file)
