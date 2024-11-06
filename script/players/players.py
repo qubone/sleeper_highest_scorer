@@ -204,7 +204,8 @@ class Professional:
 
     @property
     def team(self) -> Optional[str]:
-        """Current team of the player."""
+        """Current team of the player.
+        """
         return self._team
 
     @property
@@ -318,52 +319,48 @@ class PlayerDB:
     player_db: str = "script/resources/players_db.json"
 
 
-class DefensePlayerModel:
-    """Defense model parsed from JSON.
+@dataclass
+class TeamModel:
+    """Team model parsed from JSON.
     """
-    def __init__(
-        self,
-        active: bool,
-        position: str,
-        sport: str,
-        player_id: str,
-        fantasy_positions: List[str],
-        last_name: str,
-        first_name: str,
-        team: str,
-        injury_status: Optional[str] = None
-    ) -> None:
-        self._active = active,
-        self._position = position,
-        self._sport = sport,
-        self._player_id = player_id,
-        self._fantasy_positions = fantasy_positions,
-        self._last_name = last_name,
-        self._first_name = first_name,
-        self._team = team,
-        self._injury_status = injury_status,
+    sport: str
+    team: str 
+    first_name: str
+    last_name: str
 
     @classmethod
     def from_dict(cls, player_data: Dict[str, Any]):
         """Creates User object from dictionary data.
-
-        Args:
-            user_data (Dict[str, Any]): _description_
-
-        Returns:
-            _type_: _description_
         """
         return cls(
-            active = player_data["active"],
-            position = player_data["position"],
-            sport = player_data["sport"],
-            player_id = player_data["player_id"],
-            fantasy_positions = player_data["fantasy_positions"],
-            last_name = player_data["last_name"],
-            first_name = player_data["first_name"],
-            team = player_data["team"],
-            injury_status = player_data["injury_status"]
+            sport=player_data["sport"],
+            team=player_data["team"],
+            first_name=player_data["first_name"],
+            last_name=player_data["last_name"],
         )
+
+
+@dataclass
+class DefensePlayerModel:
+    """Defense model parsed from JSON.
+    """
+
+    position: NFLPosition
+    player_id: str
+    team_model: TeamModel
+
+    @classmethod
+    def from_dict(cls, player_data: Dict[str, Any]):
+        """Creates User object from dictionary data.
+        """
+        return cls(
+            position=player_data["position"],
+            player_id=player_data["player_id"],
+            team_model=TeamModel.from_dict(player_data)
+        )
+
+
+
 class PlayerFullModel:
     """A full model parsed from JSON.
     """
@@ -589,28 +586,51 @@ class Player:
             found_player = db[self.id]
         except KeyError as e:
             raise PlayerNotFoundError(self._id) from e
-        self.name = ""
-        #TODO: Create PlayerModel for DEF
         if not contains_letter(self.id):
             self._player = PlayerFullModel.from_dict(found_player)
-            self.name = self.player.personal.names.full_name
-            #print("Found player: ", self.player.personal.names.full_name)
+            if isinstance(self._player, PlayerFullModel):
+                self._name = self._player.personal.names.full_name
+                self._position = self._player.professional.position
+                self._team = self._player.professional.team 
         else:
-            def_player = PlayerFullModel.from_dict(found_player)
+            self._player = DefensePlayerModel.from_dict(found_player)
             print("Test")
+            self._name = self._player.team_model.team
+            self._position = self._player.position
+            self._team = self._name
  
     @property
     def id(self) -> str:
-        """Sleeper ID of the Player."""
+        """Sleeper ID of the Player.
+        """
         return self._id
 
     @property
-    def player(self) -> PlayerFullModel:
-        """Personal data of the Player."""
+    def name(self) -> str:
+        """Name of the player.
+        """
+        return self._name
+
+    @property
+    def player(self) -> PlayerFullModel | DefensePlayerModel:
+        """Personal data of the Player.
+        """
         return self._player
-    
+
+    @property
+    def position(self) -> NFLPosition:
+        """Position of the player.
+        """
+        return self._position
+
+    @property
+    def team(self) -> Optional[str]:
+        """Team of the player.
+        """
+        return self._team
+
     def __str__(self) -> str:
-        return f"{self.name} {self.player.professional.position.name} {self.player.professional.team}"
-    
+        return f"{self.name} {self.position} {self.team}"
+
     def __repr__(self):
-        return f"{self.name} ({self.player.professional.position.name})"
+        return f"{self.name} ({self.name})"
