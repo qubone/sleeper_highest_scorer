@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from script.common import write_json_to_file, read_json_from_file
-from script.user import User
+from script.model.user import User
 from script.model.avatar import Avatar
 from script.leagues.rosters import (Roster,
                                     Metadata, Settings,

@@ -27,8 +27,9 @@ class SleeperAPIParser:
         self.season = datetime.now().strftime("%Y")
 
     @staticmethod
-    def _http_get_response_data_json(url: str) -> Dict[str, Any] | None:
-        """Returns HTTP GET in JSON format."""
+    def _http_get_response_data_json(url: str) -> Optional[Dict[str, Any]]:
+        """Returns HTTP GET in JSON format.
+        """
         response = get(url, timeout=None)
         if response.status_code != 200:
             raise HTTPError("Invalid request")
@@ -44,10 +45,10 @@ class SleeperAPIParser:
 
         Response data:
         {
-        "username": "sleeperuser",
-        "user_id": "12345678",
-        "display_name": "SleeperUser",
-        "avatar": "cc12ec49965eb7856f84d71cf85306af"
+            "username": "sleeperuser",
+            "user_id": "12345678",
+            "display_name": "SleeperUser",
+            "avatar": "cc12ec49965eb7856f84d71cf85306af"
         }
         """
         user = ""
@@ -58,14 +59,18 @@ class SleeperAPIParser:
 
         return self._http_get_response_data_json(f"{self.base_url}/user/{user}")
 
-    def get_avatars(self, avatar_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def get_avatars(
+        self, avatar_id: str
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """Users and leagues have avatar images. There are thumbnail and full-size images for each avatar.
 
         GET https://sleepercdn.com/avatars/<avatar_id>
         """
-        sleeper_url = 'https://sleepercdn.com/avatars'
+        sleeper_url = "https://sleepercdn.com/avatars"
         full_size = self._http_get_response_data_json(f"{sleeper_url}/{avatar_id}")
-        thumbnail = self._http_get_response_data_json(f"{sleeper_url}/thumbs/{avatar_id}")
+        thumbnail = self._http_get_response_data_json(
+            f"{sleeper_url}/thumbs/{avatar_id}"
+        )
         return full_size, thumbnail
 
     def get_all_leagues_for_user(self, user_id: str, season: Optional[str] = None):
@@ -118,19 +123,19 @@ class SleeperAPIParser:
         GET https://api.sleeper.app/v1/league/<league_id>
 
         {
-        "total_rosters": 12,
-        "status": "in_season",
-        "sport": "nfl",
-        "settings": { settings object },
-        "season_type": "regular",
-        "season": "2018",
-        "scoring_settings": { scoring_settings object },
-        "roster_positions": [ roster positions array ],
-        "previous_league_id": "198946952535085056",
-        "name": "Sleeperbot Dynasty",
-        "league_id": "289646328504385536",
-        "draft_id": "289646328508579840",
-        "avatar": "efaefa889ae24046a53265a3c71b8b64"
+            "total_rosters": 12,
+            "status": "in_season",
+            "sport": "nfl",
+            "settings": { settings object },
+            "season_type": "regular",
+            "season": "2018",
+            "scoring_settings": { scoring_settings object },
+            "roster_positions": [ roster positions array ],
+            "previous_league_id": "198946952535085056",
+            "name": "Sleeperbot Dynasty",
+            "league_id": "289646328504385536",
+            "draft_id": "289646328508579840",
+            "avatar": "efaefa889ae24046a53265a3c71b8b64"
         }
         """
         return self._http_get_response_data_json(f"{self.base_url}/league/{league_id}")
@@ -404,7 +409,7 @@ class SleeperAPIParser:
         if season is None:
             season = self.season
         return self._http_get_response_data_json(
-            f"{self.base_url}/user/{user_id}/{self.sport}/{season}"
+            f"{self.base_url}/user/{user_id}/drafts/{self.sport}/{season}"
         )
 
     def get_all_drafts_for_a_league(self, league_id: str):

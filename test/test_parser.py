@@ -6,6 +6,7 @@ import requests
 from unittest.mock import MagicMock, Mock
 from script.players.players import Player
 from script.leagues.leagues import League
+from script.drafts import Draft
 from typing import List
 
 
@@ -77,6 +78,14 @@ def contains_letter(s: str):
     return any(char.isalpha() for char in s)
 
 
+def test_get_all_drafts_for_user(setup: Setup):
+    response = setup.api_parser.get_all_drafts_for_user(setup.user_id, "2024")
+    for draft in response:
+        test = Draft(draft)
+        print(test)
+    pass
+
+
 def test_get_trending_players(setup: Setup):
     """Get trending players and check if rostered in any league.
 
@@ -87,10 +96,15 @@ def test_get_trending_players(setup: Setup):
     trending_up_players = []
     for trend in response:
         player = trend['player_id']
+        #TODO: Add filter for SF
         if not contains_letter(player):
             # Keep player as id for performance
             #players.append(Player(player))
             trending_up_players.append(player)
+
+            #if player.position = "position": "K",
+            #pass
+            # Kicker
         else:
             defense = Player(player)
             print("TEST")

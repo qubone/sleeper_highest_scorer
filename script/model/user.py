@@ -1,6 +1,6 @@
 """Handling of Sleeper user data."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Self
 from script.model.avatar import Avatar
 
 
@@ -19,14 +19,14 @@ class User:
         self._avatar = Avatar(avatar)
 
     @classmethod
-    def from_dict(cls, user_data: Dict[str, Any]):
+    def from_dict(cls, user_data: Dict[str, Any]) -> Self:
         """Creates User object from dictionary data.
 
         Args:
             user_data (Dict[str, Any]): _description_
 
         Returns:
-            _type_: _description_
+            Self: User model
         """
         return cls(
             name=user_data["username"],
@@ -38,25 +38,30 @@ class User:
 
     @property
     def name(self) -> str:
-        """Sleeper user name."""
+        """Sleeper user name.
+        """
         return self._name
 
     @property
     def id(self) -> str:
-        """Sleeper user ID."""
+        """Sleeper user ID.
+        """
         return self._id
 
     @property
     def is_bot(self) -> bool:
-        """User is bot flag."""
+        """User is bot flag.
+        """
         return self._is_bot
 
     @property
     def display_name(self) -> str:
-        """Sleeper display name."""
+        """Sleeper display name.
+        """
         return self._display_name
 
     @property
     def avatar(self) -> Avatar:
-        """Sleeper avatar."""
+        """Sleeper avatar.
+        """
         return self._avatar

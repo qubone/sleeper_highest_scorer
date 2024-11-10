@@ -88,10 +88,28 @@ class Metadata:
 
     Description.
     """
-    def __init__(self) -> None:
-        self.scoring_type = "ppr"
-        self.name = "My Dynasty"
-        self.description = ""
+    def __init__(self, scoring_type: ScoringType, name, description) -> None:
+        self.scoring_type = scoring_type
+        self.name = name
+        self.description = description
+
+    @classmethod
+    def from_dict(cls, meta_data: Dict[str, Any]):
+        """Creates User object from dictionary data.
+
+        Args:
+            user_data (Dict[str, Any]): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        return cls(
+            meta_data["scoring_type"],
+            meta_data["name"],
+            meta_data["description"],
+        )
+
 
 class DraftType(Enum):
     """Different draft types.
@@ -126,10 +144,10 @@ class Draft:
             "start_time", "1515"
         )  # TODO: Convert to datetime
         self.sport: str = draft_data.get("sport", "nfl")
-        self.settings = Settings(draft_data.get("settings"))
+        self.settings = Settings(draft_data["settings"])
         self.season_type: str = draft_data.get("season_type", "regular")
         self.season: str = draft_data.get("season", "2017")
-        self.metadata = Metadata(draft_data.get("metadata"))
+        self.metadata = Metadata.from_dict(draft_data["metadata"])
         self.league_id: str = draft_data.get("league_id", "1233212323132")
         self.last_picked: int = draft_data.get("last_picked", 421421412412142)
         self.last_message_time: int = draft_data.get("last_message_time", 455453453434)
