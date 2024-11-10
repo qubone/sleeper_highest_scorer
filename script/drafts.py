@@ -18,6 +18,7 @@ class LeagueParse:
         traded_picks = self.parser.get_traded_picks_in_draft("draft_id")
         all_picks = self.parser.get_all_picks_in_draft("draft_id")
         draft = self.parser.get_specific_draft("draft_id")
+¨
 
 @dataclass
 class Slots:
@@ -31,12 +32,26 @@ class Slots:
     flex: int
     defense: int
     bench: int
+    super_flex: None
 
     # TODO: Check how to get super_flex slots
     # super_flex=settings.get("super_flex"),
     # self.slots_super_flex: int = 0
     # super_flex: int
 
+    @classmethod
+    def from_dict(cls, settings: Dict[str, Any]):
+            
+        return cls(
+            settings["slots_wr"],
+            settings["slots_te"],
+            settings["slots_rb"],
+            settings["slots_k"],
+            settings["slots_flex"],
+            settings["slots_def"],
+            settings["slots_bn"],
+            settings.get("super_flex", None),
+        )
 
 class Settings:
     """Draft settings.
@@ -47,19 +62,33 @@ class Settings:
     Pick timer.
     """
 
-    def __init__(self, settings: Dict[str, Any]) -> None:
-        self.teams: int = settings.get("teams")
-        self.slots = Slots(
-            wide_receiver=settings.get("slots_wr"),
-            tight_end=settings.get("slots_te"),
-            running_back=settings.get("slots_rb"),
-            kicker=settings.get("slots_k"),
-            flex=settings.get("slots_flex"),
-            defense=settings.get("slots_def"),
-            bench=settings.get("slots_bn"),
+    def __init__(self, teams, autostart, cpu_autopick, pick_timer, slots, rounds) -> None:
+        self.teams: int = teams
+        self.autostart: int = autostart
+        self.cpu_autopick: int = cpu_autopick
+        self.pick_timer: int = pick_timer
+        self.slots = slots
+        self.rounds: int = rounds
+
+    @classmethod
+    def from_dict(cls, settings: Dict[str, Any]):
+        """Creates User object from dictionary data.
+
+        Args:
+            user_data (Dict[str, Any]): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        return cls(
+            settings["teams"],  # Number of teams
+            settings["autostart"],  # 0 Off 1 On
+            settings["cpu_autopick"],  # 0 Off 1 On
+            settings["pick_timer"],
+            Slots.from_dict(settings),
+            settings["rounds"],
         )
-        self.rounds: int = settings.get("rounds")
-        self.pick_timer: int = settings.get("pick_timer")
 
 
 class ScoringType(Enum):
