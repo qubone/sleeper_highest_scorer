@@ -1,7 +1,7 @@
 """Handling of all data related to leagues."""
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Type, TypeVar, Optional, Self
+from typing import Any, Dict, List, Type, TypeVar, Optional, Self, Set
 
 from script.leagues.rosters import Roster
 from script.api_parser import SleeperAPIParser
@@ -501,35 +501,39 @@ class LeagueBracketData():
 
 class LeaguePositions:
     """Handling of league position data."""
-    def __init__(self, roster_positions: List[str]) -> List[str]:
+    def __init__(self, roster_positions: List[str]):
         self.roster_position_data = roster_positions
         self._roster_positions = []
 
-    def add_player(self) -> List[Player]:
-        """Parses the players of a roster and
-        appends the player types to a list."""
-        for pos in self.roster_position_data:
-            if pos == RosterPosition.QB:
-                self._roster_positions.append(Quarterback)
-            elif pos == RosterPosition.RB:
-                self._roster_positions.append(RunnningBack)
-            elif pos == RosterPosition.WR:
-                self._roster_positions.append(WideReceiver)
-            elif pos == RosterPosition.TE:
-                self._roster_positions.append(TightEnd)
-            elif pos == RosterPosition.FLEX:
-                self._roster_positions.append(Flex)
-            elif pos == RosterPosition.SUPER_FLEX:
-                self._roster_positions.append(SuperFlex)
-            elif pos == RosterPosition.DEF:
-                self._roster_positions.append(Defense)
-            elif pos == RosterPosition.K:
-                self._roster_positions.append(Kicker)
-            elif pos == RosterPosition.BN:
-                self._roster_positions.append(Bench)
-            else:
-                raise ValueError("No valid player type found.")
+    @classmethod
+    def from_list(cls, roster_positions: list[str]) -> Self:
+        """Creates User object from dictionary data.
 
+        Args:
+            user_data (Dict[str, Any]): _description_
+
+        Returns:
+            _type_: _description_
+        self._league_id: str = league_data.get('league_id')
+        self._draft_id: str = league_data.get('draft_id')
+        self._roster_positions = LeaguePositions(
+            league_data.get('roster_positions')
+            )
+        self._bracket_data = LeagueBracketData(league_data)
+        self._scoring_settings = ScoringSettings(
+            league_data.get('scoring_settings')
+            )
+        self._league_settings = LeagueSettingsNew(league_data.get('settings'))
+        self._metadata = Metadata(league_data.get('metadata'))
+
+        """
+        
+        unique_list = set(roster_positions)
+        unique_list.discard("BN")
+
+        return cls(
+            unique_list
+        )
     @property
     def roster_positions(self):
         """Returns the positions of a roster."""
@@ -655,7 +659,7 @@ class League:
         league_id: str = league_data['league_id']
         draft_id: str = league_data['draft_id']
         top_data = TopData.from_dict(league_data)
-        roster_positions = LeaguePositions(
+        roster_positions = LeaguePositions.from_list(
             league_data['roster_positions']
             )
         bracket_data = LeagueBracketData(league_data)
