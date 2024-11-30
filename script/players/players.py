@@ -621,7 +621,10 @@ class Player:
     def position(self) -> NFLPosition:
         """Position of the player.
         """
-        return self._position
+        if isinstance(self.player, PlayerFullModel):
+            return self._position
+        if isinstance(self.player, DefensePlayerModel):
+            return NFLPosition(self._position)
 
     @property
     def team(self) -> Optional[str]:

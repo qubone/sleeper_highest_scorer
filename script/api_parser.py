@@ -2,9 +2,10 @@
 
 https://docs.sleeper.com/#introduction
 """
-from typing import Dict, Optional, Tuple, Any
-from requests import get, HTTPError
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
+
+import requests
 
 
 class SleeperAPIParser:
@@ -30,10 +31,35 @@ class SleeperAPIParser:
     def _http_get_response_data_json(url: str) -> Optional[Dict[str, Any]]:
         """Returns HTTP GET in JSON format.
         """
-        response = get(url, timeout=None)
-        if response.status_code != 200:
-            raise HTTPError("Invalid request")
-        return response.json()
+        error_messages = {
+            400: "Bad Request -- Your request is invalid..",
+            404: "Not Found -- The specified kitten could not be found.",
+            429: "Too Many Requests -- You're requesting too many kittens! Slow down!.",
+            500: "Internal Server Error -- We had a problem with our server. Try again later.",
+            503: "Service Unavailable -- We're temporarily offline for maintenance. Please try again later."
+        }
+        try:
+            response = requests.get(url, timeout=None)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as http_err:
+            message = error_messages.get(response.status_code, f"An unexpected HTTP error occurred: {http_err}")
+            print(message)
+        except requests.exceptions.Timeout:
+            print("The request timed out.")
+        except requests.exceptions.ConnectionError:
+            print("Network problem or server is unreachable.")
+        except requests.exceptions.TooManyRedirects:
+            print("Too many redirects occurred.")
+        except requests.exceptions.MissingSchema:
+            print("The URL is missing a scheme (e.g., 'http://').")
+        except requests.exceptions.InvalidURL:
+            print("The provided URL is invalid.")
+        except requests.exceptions.JSONDecodeError:
+            print("Invalid JSON reponse.")
+        except requests.exceptions.RequestException as req_err:
+            print(f"A non-HTTP error occurred: {req_err}")
+        return None
 
     def get_user(self, user_id: str, user_name: Optional[str] = None):
         """Via the user resource, you can GET the user object by either providing

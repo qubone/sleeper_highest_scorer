@@ -6,8 +6,9 @@ import requests
 from unittest.mock import MagicMock, Mock
 from script.players.players import Player
 from script.leagues.leagues import League
+from script.model.user import User
 from script.drafts import Draft
-from typing import List
+from typing import List, Dict
 
 
 
@@ -92,55 +93,59 @@ def test_get_trending_players(setup: Setup):
     Args:
         setup (Setup): _description_
     """
+    user = User.from_dict(setup.api_parser.get_user(setup.user_id))
     response = setup.api_parser.get_trending_players(trend_type="add", lookback_hours="24", limit="25")
     trending_up_players = []
     for trend in response:
         player = trend['player_id']
+        trending_up_players.append(player)
         #TODO: Add filter for SF
-        if not contains_letter(player):
+        #if not contains_letter(player):
             # Keep player as id for performance
             #players.append(Player(player))
-            trending_up_players.append(player)
+        #    print("Adding individual player. SF or kicker")
+         #   trending_up_players.append(player)
 
             #if player.position = "position": "K",
             #pass
             # Kicker
-        else:
-            defense = Player(player)
-            print("TEST")
-    #print(trending_up_players)
-
+        #else:
+        #    print("Adding defense")
+        #    defense = Player(player)
     #Get all leagues of user
-    leagues = setup.api_parser.get_all_leagues_for_user(setup.user_id)
+    leagues = setup.api_parser.get_all_leagues_for_user(user.id)
     league_list: List[League] = []
     # Create league objects for each league
     for league in leagues:
         league_list.append(League.from_dict(league))
-    rostered_players = []
-    available_players = []
+    result: Dict[str, List[Player]] = {}
     # Loop through all leagues
     for li in league_list:
-        #test = li.rosters
+        # Create a set for all rostered players
+        rostered_players = set()
         # Loop through all rosters in a league
-        rosters = li.rosters
-        for roster in rosters:
-            roster_players = roster["players"]
-            rostered_players.extend(roster_players)
-        #print("Test")
-        for player in trending_up_players:
-            if player not in rostered_players:
-                available_players.append(Player(player))
-        # Find all players in a roster
-        print("\nAvailable players in ", li)
+        for roster in li.rosters:
+            # Add all rostered players to the set
+            if 'players' in roster and roster['players']:  # Check if "players" exists and is not None
+                rostered_players.update(roster['players'])  # Add players to the set
+        # Check if trending players are not in any of the rosters
+        available_players = [Player(player) for player in trending_up_players if player not in rostered_players]
+        # Available player for a league
         print(available_players)
-        print("############")
-    print("Test")
 
-    # Get all rosters in a league
-    # Should be inside League class
-    rosters = setup.api_parser.get_rosters_in_a_league()
-    # Check if each player are on any roster in a league
-    # Loop through rosters
+        # Add logic for checking the roster positions in a league
+        for player in available_players:
+            if player.position.name not in li.roster_positions.roster_position_data:
+                available_players.remove(player)
+                print("Found")
+            else:
+                print("Not found")
+        print(li.roster_positions)
+
+        result[li.name] = available_players
+
+    user_result = {user.name: result}
+    print(user_result)
 
 
     

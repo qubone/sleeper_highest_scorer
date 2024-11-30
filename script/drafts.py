@@ -18,7 +18,7 @@ class LeagueParse:
         traded_picks = self.parser.get_traded_picks_in_draft("draft_id")
         all_picks = self.parser.get_all_picks_in_draft("draft_id")
         draft = self.parser.get_specific_draft("draft_id")
-¨
+
 
 @dataclass
 class Slots:

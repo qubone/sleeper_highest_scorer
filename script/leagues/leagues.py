@@ -564,7 +564,7 @@ class League:
 
 
     @property
-    def rosters(self) -> List[Roster]:
+    def rosters(self) -> List[Dict[str, Any]]:
         """Rosters in a league.
         """
         league_id = self._league_id
